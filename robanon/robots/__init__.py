@@ -23,9 +23,15 @@ class Robot(object):
         if message.author.id not in self.ids:
             return
 
-        await self.client.send_typing(message.channel)
-        await asyncio.sleep(3)
-        await self.client.send_message(message.channel, self.message(message))
+        for _ in range(6):
+            try:
+                await self.client.send_typing(message.channel)
+                await asyncio.sleep(3)
+                await self.client.send_message(message.channel, self.message(message))
+                break
+            except discord.errors.HTTPException:
+                pass
+            await asyncio.sleep(1)
 
     async def ready(self):
         raise NotImplementedError
