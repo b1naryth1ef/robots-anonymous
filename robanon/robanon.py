@@ -1,5 +1,5 @@
 from robots.clever import CleverRobot
-from robots.chatter import ChatterRobot 
+# from robots.chatter import ChatterRobot 
 
 import sys
 
@@ -13,8 +13,8 @@ if __name__ == '__main__':
 
     if robot == 'clever':
         cls = CleverRobot
-    elif robot == 'chatter':
-        cls = ChatterRobot
+    # elif robot == 'chatter':
+    #     cls = ChatterRobot
     else:
         print("Unknown robot '{}'".format(robot))
         sys.exit(1)
