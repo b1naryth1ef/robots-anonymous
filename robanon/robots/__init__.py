@@ -1,6 +1,7 @@
 import discord
 import asyncio
 
+
 class Robot(object):
     def __init__(self, token, ids=None):
         self.token = token
@@ -29,7 +30,7 @@ class Robot(object):
                 await asyncio.sleep(3)
                 await self.client.send_message(message.channel, self.message(message))
                 break
-            except discord.errors.HTTPException:
+            except Exception:
                 pass
             await asyncio.sleep(1)
 

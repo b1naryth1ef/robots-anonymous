@@ -1,5 +1,5 @@
 from robots.clever import CleverRobot
-# from robots.chatter import ChatterRobot 
+# from robots.chatter import ChatterRobot
 
 import sys
 
@@ -19,5 +19,11 @@ if __name__ == '__main__':
         print("Unknown robot '{}'".format(robot))
         sys.exit(1)
 
-    obj = cls(token, ids)
-    obj.run()
+    while True:
+        try:
+            obj = cls(token, ids)
+            obj.run()
+        except KeyboardInterrupt:
+            break
+        except Exception:
+            continue
