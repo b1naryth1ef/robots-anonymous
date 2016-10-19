@@ -1,8 +1,22 @@
 import gevent
 import random
 
+from collections import deque
+
 from cleverbot import Cleverbot
 from disco.bot import Plugin, Config
+
+
+PREVIOUS_LINES = deque(maxlen=50)
+RESET_LINES = [
+    'How is the weather?',
+    'Who are you?',
+    'lol',
+    'wtf',
+    'lmao',
+    'you suck',
+    'ok',
+]
 
 
 def get_delay():
@@ -36,10 +50,19 @@ class RobanonPlugin(Plugin):
         gevent.sleep(get_delay())
         for _ in range(10):
             try:
-                event.reply(self.cb.ask(event.content))
+                msg = self.cb.ask(event.content)
+
+                # If we've sent the message more than 3 times, reset
+                if PREVIOUS_LINES.count(msg) > 3:
+                    self.cb = Cleverbot()
+                    msg = self.cb.ask(random.choice(RESET_LINES))
+
+                PREVIOUS_LINES.append(msg)
+                event.reply(msg)
                 break
             except:
                 self.log.exception('Error hitting CB:')
+                self.cb = Cleverbot()
                 gevent.sleep(2)
         else:
             event.reply('halp me :(')
