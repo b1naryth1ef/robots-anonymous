@@ -1,3 +1,4 @@
+import time
 import gevent
 import random
 
@@ -34,6 +35,41 @@ class RobanonPlugin(Plugin):
     def load(self):
         super(RobanonPlugin, self).load()
         self.cb = Cleverbot()
+        self.last_message = time.time()
+
+    @Plugin.schedule(120, init=False)
+    def keepalive(self):
+        # TODO for over channels
+        if time.time() - self.last_message > 75:
+            self.send_one(
+                    self.state.channels.get(self.config.channel_ids[0]),
+                    random.choice(RESET_LINES))
+
+    def send_one(self, channel, seed):
+        res = self.get_cb_response(seed)
+        if not res:
+            raise Exception('WTF')
+
+        channel.send_message(res)
+        self.last_message = time.time()
+
+    def get_cb_response(self, msg):
+        for _ in range(10):
+            try:
+                res = self.cb.ask(msg)
+
+                if PREVIOUS_LINES.count(res) > 3:
+                    self.log.info('Resetting due to repeats: `%s`', res)
+                    self.cb = Cleverbot()
+                    msg = random.choice(RESET_LINES)
+                    continue
+
+                PREVIOUS_LINES.append(res)
+                return res
+            except:
+                self.log.exception('Error: ')
+                self.cb = Cleverbot()
+                gevent.sleep(2)
 
     @Plugin.listen('MessageCreate')
     def on_message_create(self, event):
@@ -48,21 +84,4 @@ class RobanonPlugin(Plugin):
 
         self.client.api.channels_typing(event.channel.id)
         gevent.sleep(get_delay())
-        for _ in range(10):
-            try:
-                msg = self.cb.ask(event.content)
-
-                # If we've sent the message more than 3 times, reset
-                if PREVIOUS_LINES.count(msg) > 3:
-                    self.cb = Cleverbot()
-                    msg = self.cb.ask(random.choice(RESET_LINES))
-
-                PREVIOUS_LINES.append(msg)
-                event.reply(msg)
-                break
-            except:
-                self.log.exception('Error hitting CB:')
-                self.cb = Cleverbot()
-                gevent.sleep(2)
-        else:
-            event.reply('halp me :(')
+        self.send_one(event.channel, event.content)
